@@ -11,7 +11,7 @@
 #  * Station ID
 
 import requests
-import json
+import xml.etree.cElementTree as ET
 # Road station IDs and such can be pulled from the digitraffic API weather sensor metadata.
 #https://tie.digitraffic.fi/api/v1/metadata/weather-stations
 # Information for a specific sensor can be found from
@@ -21,26 +21,21 @@ import json
 def returnStationList():
   # Create an empty list to append tuples containing the relevant information.
   stationList = []
-  # Retrieve the metadata for road weather sensors.
-  roadMetaDataResponse = requests.get("https://tie.digitraffic.fi/api/v1/metadata/weather-stations")
+  # Retrieve current road weather sensor data from the FMI API.
+  apiDataResponse = requests.get("http://opendata.fmi.fi/wfs?service=WFS&version=2.0.0&request=GetFeature&storedquery_id=livi::observations::road::finland::multipointcoverage")
 
   # Check if the GET request is successfull. Return false otherwise.
-  if (roadMetaDataResponse.status_code == 200):
-    # Parse the JSON data
-    parsedMetaData = json.loads(roadMetaDataResponse.text)
-    for entry in parsedMetaData["features"]:
-      # Append the tuple to the list.
-      # Use try/except in order to catch malformed entries to catch bad entries
-      try:
-        stationList.append((entry["properties"]["names"]["en"],entry["properties"]["municipality"],entry["properties"]["province"],entry["properties"]["roadStationId"]))
-      except KeyError:
-        stationList.append((entry["properties"]["name"],entry["properties"]["municipality"],entry["properties"]["province"],entry["properties"]["roadStationId"]))
-
-  elif (roadMetaDataResponse.status_code == 404):
+  if (apiDataResponse.status_code == 200):
+    # Parse the XML into something usable.
+    dataTree= ET.fromstring(apiDataResponse.text)
+    for child in dataTree[0][0][4][0][0][0]:
+      stationList.append((child[0][1].text,child[0][5].text,child[0][0].text))
+  elif (apiDataResponse.status_code == 404):
     return false
 
 
   # Return the list.
   return stationList
-
-print(len(returnStationList()))
+tmp = returnStationList()
+print(tmp[0])
+print (len(tmp))
