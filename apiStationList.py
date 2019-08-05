@@ -46,7 +46,7 @@ def returnStationList():
     # Iterate through the monitoring stations.
     for child in stationDataTree:
       # Retrieve and save the name, region, FMISID and type.
-      stationList.append((child[0][1].text,child[0][3].text,child[0][0].text,"weather"))
+      stationList.append((child[0][1].text,child[0][4].text,child[0][0].text,"weather"))
   else:
     print("Request 404")
     return false
@@ -55,5 +55,8 @@ def returnStationList():
   return stationList
 
 tmp = returnStationList()
-print(tmp[0])
+
+for n in tmp:
+  print(str(n)+'\n')
+
 print (len(tmp))
