@@ -18,12 +18,12 @@ from time import sleep
 #https://tie.digitraffic.fi/api/v1/data/weather-data/ID
 # The information is in JSON format.
 
-def returnStationList():
+def returnRoadStationList():
   # Create an empty list to append tuples containing the relevant information.
   stationList = []
   # Retrieve current road weather sensor data from the FMI API.
   apiRoadResponse = requests.get("http://opendata.fmi.fi/wfs?service=WFS&version=2.0.0&request=GetFeature&storedquery_id=livi::observations::road::finland::multipointcoverage")
-  print("Road API: "+str(apiRoadResponse))
+  # print("Road API: "+str(apiRoadResponse))
   # Check if the GET request is successfull. Return false otherwise.
   if (apiRoadResponse.status_code == 200):
     # Parse the XML into something usable.
@@ -31,14 +31,22 @@ def returnStationList():
     # Iterate through the road weather stations.
     for child in roadDataTree[0][0][4][0][0][0]:
       # Retrieve the name, municipality and FMISID of the road weather staiton.
-      stationList.append((child[0][1].text,child[0][5].text,child[0][0].text, "road"))
+      try:
+        stationList.append((child[0][1].text,child[0][5].text,child[0][0].text, "road")) 
+      except:
+        print("Incorrectly formatted data")
   else:
     print("Request 404")
     return false
-  sleep(5)
+  # Sort list and return
+  stationList.sort(key=lambda tup: tup[0])
+  return stationList
+
+def returnWeatherStationList():
+  stationList = []
   # Request a list of monitoring stations available on the FMI API.
   apiWeatherResponse = requests.get("http://opendata.fmi.fi/wfs?service=WFS&version=2.0.0&request=GetFeature&storedquery_id=fmi::ef::stations&networkid=121")
-  print("Weather API: " + str(apiWeatherResponse))
+  # print("Weather API: " + str(apiWeatherResponse))
   # Check if the GET response is sucecssfull, return false otherwise.
   if (apiWeatherResponse.status_code == 200):
     # Parse the XML into something usable.
@@ -46,17 +54,26 @@ def returnStationList():
     # Iterate through the monitoring stations.
     for child in stationDataTree:
       # Retrieve and save the name, region, FMISID and type.
-      stationList.append((child[0][1].text,child[0][4].text,child[0][0].text,"weather"))
+      try:
+        stationList.append((child[0][1].text,child[0][4].text,child[0][0].text,"weather"))
+      except:
+        print("Incorrectly formatted data")
   else:
     print("Request 404")
     return false
 
-  # Return the list.
+  # Return the list after alphabetical sorting.
+  stationList.sort(key=lambda tup: tup[0])
   return stationList
 
-tmp = returnStationList()
+def fetchTest():
+  tmp = returnWeatherStationList()
+  for n in tmp:
+    print(str(n)+'\n')
+  print (len(tmp))
+  tmp2 = returnRoadStationList()
+  for n in tmp2:
+    print(str(n)+'\n')
+  print(len(tmp2))
 
-for n in tmp:
-  print(str(n)+'\n')
-
-print (len(tmp))
+fetchTest()
