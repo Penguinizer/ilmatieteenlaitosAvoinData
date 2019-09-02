@@ -21,19 +21,41 @@ def sendAPIRequest(stationTuple, startDateString, endDateString):
   # Calculate the difference in days between the given dates in order to ensure
   # requests fit within specified amount of time.
   timeDifference = abs(endDateObj-startDateObj)
-  print (timeDifference)
-  print (startDateObj+timeDifference)
+#  print (timeDifference)
+#  print (startDateObj+timeDifference)
   if (timeDifference.days > 30):
-    # Iterate through requested time in 30 day chunks.
-    print("dong")
+    # Calculate the amount of 30 day chunks and remaining days over.
+    chunkCount, remainder = divmod(timeDifference.days, 30)
+    dayChunk = datetime.timedelta(days=30)
+#    print(str(chunkCount)+ " and " + str(remainder))
+    if (stationTuple [3] == 'weather'):
+#      print ("Multiple weather station requests")
+      # Iterate through the time period entered in 30 day chunks.
+      # Sending multiple API requests in order to circumvent 30 day limit.
+      for n in range(chunkCount):
+        tempStart = startDateObj+(dayChunk*n)
+        tempEnd = startDateObj+(dayChunk*(n+1))
+#        print (str(tempStart) + " and " + str(tempEnd))
+        requestString = ("http://opendata.fmi.fi/wfs?service=WFS&version=2.0.0&request=getFeature&storedquery_id=fmi::observations::weather::hourly::timevaluepair&fmisid="+str(stationTuple[2])+"&starttime="+str(tempStart)+"&endtime="+str(tempEnd)+"&")
+#        print(requestString)
+        apiResponseList.append(requests.get(requestString))
+      # Send final request for the remaining days not covered by the previous chunks.
+      requestString = ("http://opendata.fmi.fi/wfs?service=WFS&version=2.0.0&request=getFeature&storedquery_id=fmi::observations::weather::hourly::timevaluepair&fmisid="+str(stationTuple[2])+"&starttime="+str(endDateObj-(datetime.timedelta(days=remainder)))+"&endtime="+str(endDateObj)+"&")
+      apiResponseList.append(requests.get(requestString))
+    else:
+      print ("Road Station not implemented")
   else:
-    # Generating a string for the API request.
-    requestString = ("http://opendata.fmi.fi/wfs?service=WFS&version=2.0.0&request=getFeature&storedquery_id=fmi::observations::weather::hourly::timevaluepair&fmisid="+str(stationTuple[2])+"&starttime="+str(startDateObj)+"&endtime="+str(endDateObj)+"&")
-    # Sending request to API.
-    apiResponseList.append(requests.get(requestString))
+    if (stationTuple[3] == 'weather'):
+      # Generating a string for the API request.i
+      requestString = ("http://opendata.fmi.fi/wfs?service=WFS&version=2.0.0&request=getFeature&storedquery_id=fmi::observations::weather::hourly::timevaluepair&fmisid="+str(stationTuple[2])+"&starttime="+str(startDateObj)+"&endtime="+str(endDateObj)+"&")
+      # Sending request to API.
+      apiResponseList.append(requests.get(requestString))
+    else:
+      print("Road Station not implemented")
   return apiResponseList
-  # return "dong"
+#  return "dong"
 def apiTest():
-    return sendAPIRequest(('Kuopio Maaninja', 'Kuopio', '101572', 'weather'),"2013-02-26", "2013-03-26")
+  return sendAPIRequest(('Kuopio Maaninja', 'Kuopio', '101572', 'weather'),"2013-02-26", "2013-03-26")
+#  return sendAPIRequest(('Argablargh', 'Kupio', '101572', 'weather'),"2013-01-01", "2013-06-03") 
 
 print(apiTest())
