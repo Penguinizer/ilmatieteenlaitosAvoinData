@@ -23,10 +23,13 @@ def sendAPIRequest(stationTuple, startDateString, endDateString):
   timeDifference = abs(endDateObj-startDateObj)
 #  print (timeDifference)
 #  print (startDateObj+timeDifference)
-  if (timeDifference.days > 30):
+  # Set a variable for amount of days in a chunk.
+  # Set to 30 for hourly data, 7 for 10 minute timesteps.
+  daysPerChunk = 7
+  if (timeDifference.days > daysPerChunk):
     # Calculate the amount of 30 day chunks and remaining days over.
-    chunkCount, remainder = divmod(timeDifference.days, 30)
-    dayChunk = datetime.timedelta(days=30)
+    chunkCount, remainder = divmod(timeDifference.days, daysPerChunk)
+    dayChunk = datetime.timedelta(days=daysPerChunk)
 #    print(str(chunkCount)+ " and " + str(remainder))
     if (stationTuple [3] == 'weather'):
 #      print ("Multiple weather station requests")
@@ -36,18 +39,19 @@ def sendAPIRequest(stationTuple, startDateString, endDateString):
         tempStart = startDateObj+(dayChunk*n)
         tempEnd = startDateObj+(dayChunk*(n+1))
 #        print (str(tempStart) + " and " + str(tempEnd))
-        requestString = ("http://opendata.fmi.fi/wfs?service=WFS&version=2.0.0&request=getFeature&storedquery_id=fmi::observations::weather::hourly::timevaluepair&fmisid="+str(stationTuple[2])+"&starttime="+str(tempStart)+"&endtime="+str(tempEnd)+"&")
+        requestString = ("http://opendata.fmi.fi/wfs?service=WFS&version=2.0.0&request=getFeature&storedquery_id=fmi::observations::weather::timevaluepair&fmisid="+str(stationTuple[2])+"&starttime="+str(tempStart)+"&endtime="+str(tempEnd)+"&timestep=10&")
 #        print(requestString)
         apiResponseList.append(requests.get(requestString))
       # Send final request for the remaining days not covered by the previous chunks.
-      requestString = ("http://opendata.fmi.fi/wfs?service=WFS&version=2.0.0&request=getFeature&storedquery_id=fmi::observations::weather::hourly::timevaluepair&fmisid="+str(stationTuple[2])+"&starttime="+str(endDateObj-(datetime.timedelta(days=remainder)))+"&endtime="+str(endDateObj)+"&")
+      requestString = ("http://opendata.fmi.fi/wfs?service=WFS&version=2.0.0&request=getFeature&storedquery_id=fmi::observations::weather::timevaluepair&fmisid="+str(stationTuple[2])+"&starttime="+str(endDateObj-(datetime.timedelta(days=remainder)))+"&endtime="+str(endDateObj)+"&timestep=10&")
       apiResponseList.append(requests.get(requestString))
     else:
       print ("Road Station not implemented")
   else:
     if (stationTuple[3] == 'weather'):
       # Generating a string for the API request.i
-      requestString = ("http://opendata.fmi.fi/wfs?service=WFS&version=2.0.0&request=getFeature&storedquery_id=fmi::observations::weather::hourly::timevaluepair&fmisid="+str(stationTuple[2])+"&starttime="+str(startDateObj)+"&endtime="+str(endDateObj)+"&")
+      requestString = ("http://opendata.fmi.fi/wfs?service=WFS&version=2.0.0&request=getFeature&storedquery_id=fmi::observations::weather::timevaluepair&fmisid="+str(stationTuple[2])+"&starttime="+str(startDateObj)+"&endtime="+str(endDateObj)+"&timestep=10&")
+#      print(requestString)
       # Sending request to API.
       apiResponseList.append(requests.get(requestString))
     else:
@@ -55,7 +59,7 @@ def sendAPIRequest(stationTuple, startDateString, endDateString):
   return apiResponseList
 #  return "dong"
 def apiTest():
-  return sendAPIRequest(('Kuopio Maaninja', 'Kuopio', '101572', 'weather'),"2013-02-26", "2013-03-26")
+  return sendAPIRequest(('Kuopio Maaninja', 'Kuopio', '101572', 'weather'),"2013-02-01", "2013-02-22")
 #  return sendAPIRequest(('Argablargh', 'Kupio', '101572', 'weather'),"2013-01-01", "2013-06-03") 
 
 print(apiTest())
