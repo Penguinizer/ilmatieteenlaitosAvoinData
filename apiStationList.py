@@ -1,7 +1,9 @@
 # File: apiSTationList.py
 # Contains functions:
-# * returnStationList()
-# Purpose of function:
+# * returnRoadStationList()
+# * returnWeatherStationList()
+# * fetchTest()
+# Purpose of functions:
 # To pull up an up to date list of weather stations and road weather stations so that the user may select the relevant ones. 
 # Inputs: none
 # Outputs: List of Weather Stations containing:
@@ -11,7 +13,6 @@
 
 import requests
 import xml.etree.cElementTree as ET
-from time import sleep
 # Road station IDs and such can be pulled from the digitraffic API weather sensor metadata.
 #https://tie.digitraffic.fi/api/v1/metadata/weather-stations
 # Information for a specific sensor can be found from
